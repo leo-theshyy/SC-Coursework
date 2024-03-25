@@ -38,7 +38,7 @@ def solve_to(method, f, x0, t0, t1, dt_max):
     return np.array(t_values), np.array(x_values)
 
 
-# Define the derivative function for the ODE x' = x
+# Define the f
 def f(x, t):
     return x
 
@@ -87,10 +87,11 @@ plt.grid(True)
 plt.show()
 
 # Find step sizes for each method that give the same error
-target_error = 0.001
+target_error = 0.001 # You can determine it as you like, let’s set it as 0.001 here
 
 dt_values_find = np.linspace(0.001,0.1,100)  # Generate a range of time step sizes
 
+# First record the time at the beginning, then record the end time after running, and you can get the time the code runs
 start_time_euler = time.time()
 for dt in dt_values_find:
     error = calculate_error('euler', [dt])[0]
