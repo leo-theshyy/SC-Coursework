@@ -3,12 +3,12 @@ import matplotlib.pyplot as plt
 import time
 
 
-# Perform a single Euler step for solving the ODE x' = f using the Euler method
+# Perform a single Euler step
 def euler_step(f, x0, t0, dt):
     return x0 + dt * f(x0, t0)
 
 
-# Perform a single RK4 step for solving the ODE x' = f using the RK4
+# Perform a single RK4 step
 def rk4_step(f, x0, t0, dt):
     k1 = dt * f(x0, t0)
     k2 = dt * f(x0 + 0.5 * k1, t0 + 0.5 * dt)
@@ -39,7 +39,7 @@ def solve_to(method, f, x0, t0, t1, dt_max):
 
 
 # Define the derivative function for the ODE x' = x
-def derivative(x, t):
+def f(x, t):
     return x
 
 
@@ -53,7 +53,7 @@ def calculate_error(method, dt_values):
     errors = []
 
     for dt in dt_values:
-        t_numerical, x_numerical = solve_to(method, derivative, 1, t0, t1, dt_max=dt)
+        t_numerical, x_numerical = solve_to(method, f, 1, t0, t1, dt)
         x_analytical = analytical_solution(t_numerical)
         error = np.abs(x_numerical[-1] - x_analytical[-1])
         errors.append(error)
@@ -61,13 +61,12 @@ def calculate_error(method, dt_values):
     return errors
 
 
-# Define time range and maximum time step
+# Define time range
 t0 = 0
 t1 = 1
-dt_max = 0.1
 
 # Calculate solutions with different time steps
-dt_values = [0.001, 0.01, 0.05, 0.1, 0.2, 0.5]
+dt_values = [0.0001, 0.001, 0.01, 0.05, 0.1, 0.2, 0.5]
 
 # Calculate errors for Euler method
 euler_errors = calculate_error('euler', dt_values)
@@ -88,21 +87,22 @@ plt.grid(True)
 plt.show()
 
 # Find step sizes for each method that give the same error
-target_error = 0.01
+target_error = 0.001
+
+dt_values_find = np.linspace(0.001,0.1,100)  # Generate a range of time step sizes
 
 start_time_euler = time.time()
-for dt in dt_values:
+for dt in dt_values_find:
     error = calculate_error('euler', [dt])[0]
     if error <= target_error:
         break
 euler_time = time.time() - start_time_euler
+print(f"Euler method: Time step size = {dt}, Time taken = {euler_time} seconds")
 
 start_time_rk4 = time.time()
-for dt in dt_values:
+for dt in dt_values_find:
     error = calculate_error('rk4', [dt])[0]
     if error <= target_error:
         break
 rk4_time = time.time() - start_time_rk4
-
-print(f"Euler method: Time step size = {dt}, Time taken = {euler_time} seconds")
 print(f"RK4 method: Time step size = {dt}, Time taken = {rk4_time} seconds")
