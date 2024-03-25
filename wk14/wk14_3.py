@@ -41,7 +41,7 @@ def derivative(x, t):
 x0 = np.array([0, 1])  # x(0) = 0, x'(0) = 1
 t0 = 0
 t1 = 10
-dt_max = 0.1
+dt_max = 0.5
 
 # Solve the system using Euler method
 t_euler, x_euler = solve_to('euler', derivative, x0, t0, t1, dt_max)
