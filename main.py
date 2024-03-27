@@ -1,7 +1,7 @@
 import ode_iv_solver as iv
 
 def f(x,t):
-    return x
+    return x+t
 
 x0 = 0
 t0 = 0

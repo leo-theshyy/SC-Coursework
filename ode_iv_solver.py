@@ -38,7 +38,7 @@ def solve_to(f, x0, t0, t1, dt_max, method):
 # Analytical solution of the ODE
 def analytical_solution(t):
     return np.exp(t)
-
+'''
 # Calculate error based on method parameter
 def calculate_error(method, dt_values):
     errors = []
@@ -50,5 +50,5 @@ def calculate_error(method, dt_values):
         errors.append(error)
 
     return errors
-
+'''
 
