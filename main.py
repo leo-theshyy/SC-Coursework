@@ -24,7 +24,37 @@ print(t_numerical[-1])
 print(x_numerical[-1])
 
 '''
-using the scipy to solve the odes
+Errors and graphics
+'''
+'''
+# Calculate solutions with different time steps
+dt_values = [0.0001, 0.001, 0.01, 0.05, 0.1, 0.2, 0.5]
+
+# Calculate errors for Euler method
+euler_errors = ode.calculate_error(f, x0, t0, t1, dt_values, 'euler')
+
+# Calculate errors for RK4 method
+rk4_errors = ode.calculate_error(f, x0, t0, t1, dt_values, 'rk4')
+
+# Plot errors for both methods
+plt.figure(figsize=(8, 6))
+plt.loglog(dt_values, euler_errors, marker='o', linestyle='-', label='Euler Method')
+plt.loglog(dt_values, rk4_errors, marker='o', linestyle='-', label='RK4 Method')
+plt.title('Error vs. Time Step Size')
+plt.xlabel('Time Step Size ($\Delta t$)')
+plt.ylabel('Error')
+plt.legend()
+plt.grid(True)
+plt.show()
+'''
+
+
+
+
+
+
+'''
+1_a
 '''
 def ode_system(y, t, A, B):
     x, y = y
@@ -56,24 +86,14 @@ plt.grid(True)
 plt.show()
 
 '''
-Errors and graphics
+1_b
 '''
-# Calculate solutions with different time steps
-dt_values = [0.0001, 0.001, 0.01, 0.05, 0.1, 0.2, 0.5]
+# 定义初始猜测值
+initial_guess = np.array([x_guess, y_guess])  # 替换为您的初始猜测值
 
-# Calculate errors for Euler method
-euler_errors = ode.calculate_error(f, x0, t0, t1, dt_values, 'euler')
+# 调用 numerical_shooting 函数，获取起始点的坐标和振荡周期
+initial_conditions, period = ode.numerical_shooting(ode_system, t_span, initial_guess)
 
-# Calculate errors for RK4 method
-rk4_errors = ode.calculate_error(f, x0, t0, t1, dt_values, 'rk4')
-
-# Plot errors for both methods
-plt.figure(figsize=(8, 6))
-plt.loglog(dt_values, euler_errors, marker='o', linestyle='-', label='Euler Method')
-plt.loglog(dt_values, rk4_errors, marker='o', linestyle='-', label='RK4 Method')
-plt.title('Error vs. Time Step Size')
-plt.xlabel('Time Step Size ($\Delta t$)')
-plt.ylabel('Error')
-plt.legend()
-plt.grid(True)
-plt.show()
+# 输出起始点的坐标和振荡周期
+print("Coordinates of the starting point:", initial_conditions)
+print("Oscillation period:", round(period, 2))

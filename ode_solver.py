@@ -62,6 +62,44 @@ scipy
 ode_solver
 '''
 def ode_solver(ode_func, initial_conditions, t_span, *args, **kwargs):
-    solution = odeint(ode_func, initial_conditions, t_span, *args, **kwargs)
+    solution = odeint(ode_func, initial_conditions, t_span, args = args, **kwargs)
     t = t_span if hasattr(t_span, '__len__') else [t_span[0], t_span[-1]]
     return t, solution
+
+'''
+numerical_shooting
+'''
+def numerical_shooting(ode_func, t_span, initial_guess, tol=1e-6, max_iter=100):
+    
+    def objective_function(y, t_span):
+        _, y_solution = ode_solver(ode_func, y, t_span)
+        return y_solution[-1] - initial_guess
+    
+    # Initial guess for the shooting method
+    initial_conditions = initial_guess
+    
+    # Perform shooting method
+    for _ in range(max_iter):
+        # Solve the ODE system with the current initial conditions
+        y_solution = odeint(ode_func, initial_conditions, t_span)
+        
+        # Check the phase condition
+        if np.abs(y_solution[-1] - initial_guess) < tol:
+            # If phase condition is met, compute period and return
+            period = compute_period(y_solution)
+            return initial_conditions, period
+        
+        # Use Newton's method to update the initial conditions
+        initial_conditions -= (objective_function(initial_conditions, t_span) /
+                                np.gradient(ode_func(initial_conditions, t_span)))
+    
+    raise ValueError("Numerical shooting did not converge within the maximum number of iterations.")
+
+'''
+compute the period
+'''
+def compute_period(solution):
+    # Assuming the solution contains at least two periods
+    peak_indices = np.where(np.logical_and(solution[:-1] < solution[1:], solution[1:] < solution[:-1]))[0]
+    period = np.mean(np.diff(peak_indices))
+    return period
