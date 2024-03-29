@@ -58,21 +58,21 @@ def calculate_error(f, x0, t0, t1, dt_values, method):
     return errors
 
 '''
-scipy
+scipy.odeint
 ode_solver
 '''
 def ode_solver(ode_func, initial_conditions, t_span, *args, **kwargs):
-    solution = odeint(ode_func, initial_conditions, t_span, args = args, **kwargs)
+    solution = odeint(ode_func, initial_conditions, t_span, args, **kwargs)
     t = t_span if hasattr(t_span, '__len__') else [t_span[0], t_span[-1]]
     return t, solution
 
 '''
 numerical_shooting
 '''
-def numerical_shooting(ode_func, t_span, initial_guess, tol=1e-6, max_iter=100):
+def numerical_shooting(ode_func, t_span, initial_guess, *args, tol=1e-6, max_iter=100, **kwargs):
     
     def objective_function(y, t_span):
-        _, y_solution = ode_solver(ode_func, y, t_span)
+        _, y_solution = ode_solver(ode_func, y, t_span, *args)
         return y_solution[-1] - initial_guess
     
     # Initial guess for the shooting method
@@ -81,17 +81,17 @@ def numerical_shooting(ode_func, t_span, initial_guess, tol=1e-6, max_iter=100):
     # Perform shooting method
     for _ in range(max_iter):
         # Solve the ODE system with the current initial conditions
-        y_solution = odeint(ode_func, initial_conditions, t_span)
+        y_solution = odeint(ode_func, initial_conditions, t_span, args, **kwargs)
         
         # Check the phase condition
-        if np.abs(y_solution[-1] - initial_guess) < tol:
+        if np.allclose(y_solution[-1], initial_guess, atol=tol):
             # If phase condition is met, compute period and return
             period = compute_period(y_solution)
             return initial_conditions, period
         
         # Use Newton's method to update the initial conditions
         initial_conditions -= (objective_function(initial_conditions, t_span) /
-                                np.gradient(ode_func(initial_conditions, t_span)))
+                                np.gradient(ode_func(initial_conditions, t_span, *args)))
     
     raise ValueError("Numerical shooting did not converge within the maximum number of iterations.")
 

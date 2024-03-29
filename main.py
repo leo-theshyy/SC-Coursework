@@ -69,17 +69,20 @@ y0 = [1, 1]  # 初始条件
 t_span = np.linspace(0, 20, 1001)  # 时间范围
 
 # 求解常微分方程组
-t, solution = ode.ode_solver(ode_system, y0, t_span, (A, B))
+t, solution = ode.ode_solver(ode_system, y0, t_span, A, B)
 
 # 提取解的结果
 x_solution = solution[:, 0]
 y_solution = solution[:, 1]
 
+print(x_solution)
+print(y_solution)
+
 # 绘制结果
 plt.plot(t, x_solution, label='x(t)')
 plt.plot(t, y_solution, label='y(t)')
 plt.xlabel('Time')
-plt.ylabel('Concentration')
+plt.ylabel('x,y')
 plt.title('Brusselator System for B = 3')
 plt.legend()
 plt.grid(True)
@@ -89,10 +92,10 @@ plt.show()
 1_b
 '''
 # 定义初始猜测值
-initial_guess = np.array([x_guess, y_guess])  # 替换为您的初始猜测值
+initial_guess = np.array([0.60, 4.72])  # 替换为您的初始猜测值
 
 # 调用 numerical_shooting 函数，获取起始点的坐标和振荡周期
-initial_conditions, period = ode.numerical_shooting(ode_system, t_span, initial_guess)
+initial_conditions, period = ode.numerical_shooting(ode_system, t_span, initial_guess, A, B)
 
 # 输出起始点的坐标和振荡周期
 print("Coordinates of the starting point:", initial_conditions)
