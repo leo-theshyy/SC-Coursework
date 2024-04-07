@@ -69,11 +69,11 @@ def ode_solver(ode_func, initial_conditions, t_span, *args, **kwargs):
 '''
 numerical_shooting
 '''
-def numerical_shooting(ode_func, t_span, initial_guess, *args, tol=1e-6, max_iter=100, **kwargs):
+def numerical_shooting(ode_func, t_span, initial_guess, *args, tol=0.1, max_iter=1000, **kwargs):
     
     def objective_function(y, t_span):
         _, y_solution = ode_solver(ode_func, y, t_span, *args)
-        return y_solution[-1] - initial_guess
+        return initial_guess - y_solution[-1]   #G(u0)
     
     # Initial guess for the shooting method
     initial_conditions = initial_guess

@@ -75,8 +75,8 @@ t, solution = ode.ode_solver(ode_system, y0, t_span, A, B)
 x_solution = solution[:, 0]
 y_solution = solution[:, 1]
 
-print(x_solution)
-print(y_solution)
+print(x_solution[200])
+print(y_solution[200])
 
 # 绘制结果
 plt.plot(t, x_solution, label='x(t)')
@@ -92,7 +92,7 @@ plt.show()
 1_b
 '''
 # 定义初始猜测值
-initial_guess = np.array([0.60, 4.72])  # 替换为您的初始猜测值
+initial_guess = np.array([0.38996, 4.06949])  # 替换为您的初始猜测值
 
 # 调用 numerical_shooting 函数，获取起始点的坐标和振荡周期
 initial_conditions, period = ode.numerical_shooting(ode_system, t_span, initial_guess, A, B)
