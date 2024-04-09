@@ -1,86 +1,36 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 # Import the module that solves the initial value problem
 import ode_solver as ode
-
-'''
-Solve the ode
-'''
-# Define f of the ode that needs to be solved
-def f(x, t):
-    return x
-
-# Define the initial values and the step
-x0 = 1
-t0 = 0
-t1 = 1
-dt = 0.1
-
-# Use the solve_to function to solve the ode
-t_numerical, x_numerical = ode.solve_to(f,x0, t0, t1, dt, 'euler')
-
-# Print the answer
-print(t_numerical[-1])
-print(x_numerical[-1])
-
-'''
-Errors and graphics
-'''
-'''
-# Calculate solutions with different time steps
-dt_values = [0.0001, 0.001, 0.01, 0.05, 0.1, 0.2, 0.5]
-
-# Calculate errors for Euler method
-euler_errors = ode.calculate_error(f, x0, t0, t1, dt_values, 'euler')
-
-# Calculate errors for RK4 method
-rk4_errors = ode.calculate_error(f, x0, t0, t1, dt_values, 'rk4')
-
-# Plot errors for both methods
-plt.figure(figsize=(8, 6))
-plt.loglog(dt_values, euler_errors, marker='o', linestyle='-', label='Euler Method')
-plt.loglog(dt_values, rk4_errors, marker='o', linestyle='-', label='RK4 Method')
-plt.title('Error vs. Time Step Size')
-plt.xlabel('Time Step Size ($\Delta t$)')
-plt.ylabel('Error')
-plt.legend()
-plt.grid(True)
-plt.show()
-'''
-
-
-
-
 
 
 '''
 1_a
 '''
-def ode_system(y, t, A, B):
-    x, y = y
+#Define the ode system for Q1
+def a_ode_system(xy, t, A, B):
+    x, y = xy
     dxdt = A + x**2 * y - (B + 1) * x
     dydt = B * x - x**2 * y
     return [dxdt, dydt]
 
-# 初始条件和时间范围
+# Set initial values
 A = 1
 B = 3
 y0 = [1, 1]  # 初始条件
 t_span = np.linspace(0, 20, 1001)  # 时间范围
 
-# 求解常微分方程组
-t, solution = ode.ode_solver(ode_system, y0, t_span, A, B)
+# Solve the ode
+t, solution = ode.ode_solver(a_ode_system, y0, t_span, A, B)
 
-# 提取解的结果
-x_solution = solution[:, 0]
-y_solution = solution[:, 1]
+# Get the solution
+x_solution_a = solution[:, 0]
+y_solution_a = solution[:, 1]
 
-print(x_solution[200])
-print(y_solution[200])
-
-# 绘制结果
-plt.plot(t, x_solution, label='x(t)')
-plt.plot(t, y_solution, label='y(t)')
+# Plot the solution as x-t and y-t graphs
+plt.plot(t, x_solution_a, label='x(t)')
+plt.plot(t, y_solution_a, label='y(t)')
 plt.xlabel('Time')
 plt.ylabel('x,y')
 plt.title('Brusselator System for B = 3')
@@ -88,15 +38,72 @@ plt.legend()
 plt.grid(True)
 plt.show()
 
+#Plot the limit cycle
+plt.plot(x_solution_a,y_solution_a,label='1')
+plt.xlabel('x')
+plt.ylabel('y')
+plt.title('x-y')
+plt.legend()
+plt.grid(True)
+plt.show()
+
 '''
 1_b
-'''
+
 # 定义初始猜测值
 initial_guess = np.array([0.38996, 4.06949])  # 替换为您的初始猜测值
 
 # 调用 numerical_shooting 函数，获取起始点的坐标和振荡周期
-initial_conditions, period = ode.numerical_shooting(ode_system, t_span, initial_guess, A, B)
+initial_conditions, period = ode.numerical_shooting(a_ode_system, t_span, initial_guess, A, B)
 
 # 输出起始点的坐标和振荡周期
 print("Coordinates of the starting point:", initial_conditions)
 print("Oscillation period:", round(period, 2))
+'''
+
+
+
+
+'''
+2_a
+'''
+#Define the ode system for Q2
+def b_ode_system(xyz, t, beta):
+    x, y, z = xyz
+    dxdt = beta * x - y - z + x * (x**2 + y**2 + z**2) - x * (x**2 + y**2 + z**2)**2
+    dydt = x + beta * y - z + y * (x**2 + y**2 + z**2) - y * (x**2 + y**2 + z**2)**2
+    dzdt = x + y + beta * z + z * (x**2 + y**2 + z**2) - z * (x**2 + y**2 + z**2)**2
+    return [dxdt, dydt, dzdt]
+
+#Set initial values
+beta = 1
+xyz0 = [1,0,-1]
+t_span = np.linspace(0, 10, 1001)
+
+#Solve the ode
+t, solution = ode.ode_solver(b_ode_system, xyz0, t_span, beta)
+
+#Get the solution
+x_solution_b = solution[:, 0]
+y_solution_b = solution[:, 1]
+z_solution_b = solution[:, 2]
+
+#Plot the solution
+plt.plot(t, x_solution_b, label='x(t)')
+plt.plot(t, y_solution_b, label='y(t)')
+plt.plot(t, z_solution_b, label='z(t)')
+plt.xlabel('Time')
+plt.ylabel('x,y,z')
+plt.title('b')
+plt.legend()
+plt.grid(True)
+plt.show()
+
+# Plot the limit cycle
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+ax.plot(x_solution_b, y_solution_b, z_solution_b)
+ax.set_xlabel('X')
+ax.set_ylabel('Y')
+ax.set_zlabel('Z')
+plt.show()
