@@ -19,7 +19,7 @@ def a1_ode_system(xy, t, A, B):
 # Set initial values
 A = 1
 B = 3
-xy0 = [0.61843, 4.72089]  # 初始条件
+xy0 = [1, 1]  # 初始条件
 t_span = np.linspace(0, 20, 1001)  # 时间范围
 
 # Solve the ode
@@ -78,7 +78,7 @@ def a2_ode_system(xyz, t, beta):
 
 #Set initial values
 beta = 1
-xyz0 = [-0.939629, -0.086618, 0.853011]
+xyz0 = [1, 0, -1]
 t_span = np.linspace(0, 20, 1001)
 
 #Solve the ode
