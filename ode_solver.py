@@ -103,7 +103,7 @@ def compute_period(solution, t_span):
     print(peaks)
     if len(peaks) < 2:
         # 如果找不到足够的峰值，返回一个默认值或者抛出异常
-        return np.nan  # 或者 raise ValueError("Cannot compute period: not enough peaks found.")
+        return np.nan  
     period = (t_span[1]-t_span[0])*(peaks[1]-peaks[0])
     return period
 
