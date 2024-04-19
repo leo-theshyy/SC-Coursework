@@ -3,6 +3,7 @@ from scipy.integrate import odeint
 from scipy.integrate import solve_bvp
 from scipy.integrate import solve_ivp
 import matplotlib.pyplot as plt
+from scipy.optimize import root
 '''
 import numpy as np
 from scipy.integrate import odeint
@@ -173,7 +174,7 @@ try:
 except ValueError as e:
     print(e)
     
-    '''
+    
     
     
     
@@ -185,3 +186,37 @@ valleys, _ = find_peaks([-x for x in data])
 
 print(peaks)
 print(valleys)
+
+'''
+
+
+
+
+
+
+# Define the differential equations
+def dydt(t, y, B):
+    x, y = y
+    dxdt = 1 + x**2 * y - (B + 1) * x
+    dydt = B * x - x**2 * y
+    return [dxdt, dydt]
+
+# Define the continuation function
+def continuation(x, B):
+    sol = solve_ivp(lambda t, y: dydt(t, y, B), [0, 100], [x, 0.1], t_eval=np.linspace(0, 100, 1000))
+    return sol.y[0][-1] - sol.y[0][0]  # Return the change in x over time
+
+# Find the branch of limit cycles using natural-parameter continuation
+B_values = np.linspace(2, 3, 100)
+x_values = []
+for B in B_values:
+    sol = root(continuation, 0.1, args=(B,))
+    x_values.append(sol.x[0])
+
+# Plot the results
+plt.plot(B_values, x_values)
+plt.xlabel('B')
+plt.ylabel('x')
+plt.title('Branch of Limit Cycles from Hopf Bifurcation')
+plt.grid(True)
+plt.show()
