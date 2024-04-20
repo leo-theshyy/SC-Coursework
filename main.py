@@ -51,6 +51,15 @@ plt.legend()
 plt.grid(True)
 plt.show()
 
+#画相位图
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+ax.plot(t, x_solution_a, y_solution_a)
+ax.set_xlabel('t')
+ax.set_ylabel('x')
+ax.set_zlabel('y')
+plt.show()
+
 '''
 1_b
 '''

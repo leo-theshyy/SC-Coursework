@@ -187,10 +187,6 @@ valleys, _ = find_peaks([-x for x in data])
 print(peaks)
 print(valleys)
 
-'''
-
-
-
 
 
 
@@ -218,5 +214,33 @@ plt.plot(B_values, x_values)
 plt.xlabel('B')
 plt.ylabel('x')
 plt.title('Branch of Limit Cycles from Hopf Bifurcation')
+plt.grid(True)
+plt.show()
+'''
+
+
+# Step 1: Define the ODE
+def ode(t, y, alpha):
+    return alpha * y - y**3
+
+# Step 2: Solve the ODE for a specific alpha
+def solve_ode(alpha):
+    sol = solve_ivp(lambda t, y: ode(t, y, alpha), [0, 10], [1], t_eval=np.linspace(0, 10, 100))
+    return sol.y[0]
+
+# Step 3: Change the parameter alpha
+alpha_values = np.linspace(-2, 2, 100)
+
+# Step 4: Continuation analysis
+y_values = []
+for alpha in alpha_values:
+    y = solve_ode(alpha)
+    y_values.append(y[-1])  # Taking the final value of y
+
+# Plot the results
+plt.plot(alpha_values, y_values)
+plt.xlabel('alpha')
+plt.ylabel('y')
+plt.title('Continuation Analysis')
 plt.grid(True)
 plt.show()
