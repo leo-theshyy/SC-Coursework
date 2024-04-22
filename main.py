@@ -18,7 +18,7 @@ def a1_ode_system(xy, t, A, B):
 
 # Set initial values
 A = 1
-B = 3
+B = 2
 xy0 = [1, 1]  # 初始条件
 t_span = np.linspace(0, 20, 1001)  # 时间范围
 
@@ -73,6 +73,21 @@ initial_conditions, period = ode.numerical_shooting(a1_ode_system, t_span, initi
 # 输出起始点的坐标和振荡周期
 print("Coordinates of the starting point:", initial_conditions)
 print("Oscillation period:", round(period, 2))
+
+'''
+1_c
+'''
+
+
+
+
+
+
+
+
+
+
+
 
 '''
 2_a
@@ -135,3 +150,44 @@ initial_conditions, period = ode.numerical_shooting(a2_ode_system, t_span, initi
 # 输出起始点的坐标和振荡周期
 print("Coordinates of the starting point:", initial_conditions)
 print("Oscillation period:", round(period, 2))
+
+'''
+2_c
+'''
+
+
+
+
+
+
+
+
+
+
+'''
+3_a
+'''
+
+'''
+3_b
+'''
+
+
+
+
+
+
+
+
+
+
+
+
+
+'''
+6_a
+'''
+
+'''
+6_b
+'''

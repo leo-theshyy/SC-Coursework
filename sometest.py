@@ -216,7 +216,7 @@ plt.ylabel('x')
 plt.title('Branch of Limit Cycles from Hopf Bifurcation')
 plt.grid(True)
 plt.show()
-'''
+
 
 
 # Step 1: Define the ODE
@@ -244,3 +244,97 @@ plt.ylabel('y')
 plt.title('Continuation Analysis')
 plt.grid(True)
 plt.show()
+'''
+
+import numpy as np
+from scipy.optimize import root
+from scipy.integrate import solve_ivp
+import matplotlib.pyplot as plt
+
+# Define the ODE system
+def dydt(t, y, A, B):
+    x, y = y
+    dxdt = A + x**2 * y - (B + 1) * x
+    dydt = B * x - x**2 * y
+    return [dxdt, dydt]
+
+# Step 1: Find the equilibrium points
+def equilibrium_points(A, B):
+    # Define the equations for root finding
+    def equations(y):
+        x, y = y
+        return [A + x**2 * y - (B + 1) * x, B * x - x**2 * y]
+
+    # Initial guesses for equilibrium points
+    guesses = [[0, 0], [1, 1], [-1, -1]]
+
+    # Find equilibrium points using root finding
+    equilibria = []
+    for guess in guesses:
+        sol = root(equations, guess)
+        if sol.success:
+            equilibria.append(sol.x)
+    return equilibria
+
+# Step 2: Linear stability analysis
+def stability_analysis(A, B, equilibria):
+    for equilibrium in equilibria:
+        x, y = equilibrium
+        # Jacobian matrix
+        J = [[2 * x * y - (B + 1), x**2], [B - 2 * x * y, -x**2]]
+        # Eigenvalues
+        eigenvalues = np.linalg.eigvals(J)
+        # Check stability
+        if all(np.real(eig) < 0 for eig in eigenvalues):
+            print(f"Equilibrium point {equilibrium} is stable.")
+        else:
+            print(f"Equilibrium point {equilibrium} is unstable.")
+
+# Step 3: Find Hopf bifurcation point
+def hopf_bifurcation(A, B):
+    # Define the function to find Hopf bifurcation
+    def continuation(alpha, B):
+        equilibria = equilibrium_points(A, B)
+        x, y = equilibria[0]
+        return x - 1, y - 1
+
+    # Solve for the Hopf bifurcation point
+    sol = root(continuation, [0.1, 0.1], args=(B,))
+    if sol.success:
+        print(f"Hopf bifurcation point at B = {B}: {sol.x}")
+    else:
+        print("Hopf bifurcation point not found.")
+
+
+# Step 4: Plot the limit cycles
+def plot_limit_cycles(A, B):
+    # Define the function to solve ODE for a given B
+    def solve_ode(B):
+        equilibria = equilibrium_points(A, B)
+        x0, y0 = equilibria[0]
+        sol = solve_ivp(lambda t, y: dydt(t, y, A, B), [0, 10], [x0, y0], t_eval=np.linspace(0, 10, 100))
+        return sol.y
+
+    # Plot the limit cycles for B in range [2, 3]
+    B_values = np.linspace(2, 3, 50)
+    for B in B_values:
+        xy = solve_ode(B)
+        plt.plot(xy[0], xy[1], color='b', alpha=0.3)
+    plt.xlabel('x')
+    plt.ylabel('y')
+    plt.title('Limit Cycles for B in [2, 3]')
+    plt.grid(True)
+    plt.show()
+
+# Main function
+def main():
+    A = 1
+    B_values = np.linspace(2, 3, 11)
+
+    for B in B_values:
+        hopf_bifurcation(A, B)
+
+    plot_limit_cycles(A, B_values)
+
+if __name__ == "__main__":
+    main()
