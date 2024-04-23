@@ -18,7 +18,7 @@ def a1_ode_system(xy, t, A, B):
 
 # Set initial values
 A = 1
-B = 2
+B = 3
 xy0 = [1, 1]  # 初始条件
 t_span = np.linspace(0, 20, 1001)  # 时间范围
 
@@ -28,6 +28,8 @@ t, solution = ode.ode_solver(a1_ode_system, xy0, t_span, A, B)
 # Get the solution
 x_solution_a = solution[:, 0]
 y_solution_a = solution[:, 1]
+
+
 
 print(x_solution_a[-1])
 print(y_solution_a[-1])
@@ -65,6 +67,7 @@ plt.show()
 '''
 # 定义初始猜测值
 initial_conditions = np.array([0.61843, 4.72089])
+initial_conditions = np.array([1.0, 1.0])
 initial_guess = np.array([0.4091137, 4.1735098])  
 
 # 调用 numerical_shooting 函数，获取起始点的坐标和振荡周期
@@ -78,6 +81,13 @@ print("Oscillation period:", round(period, 2))
 1_c
 '''
 
+A = 1
+B_values = np.linspace(2, 3, 11)
+
+for B in B_values:
+    ode.hopf_bifurcation(A, B)
+
+ode.plot_limit_cycles(a1_ode_system, A, B_values)
 
 
 

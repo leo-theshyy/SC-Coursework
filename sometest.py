@@ -4,6 +4,7 @@ from scipy.integrate import solve_bvp
 from scipy.integrate import solve_ivp
 import matplotlib.pyplot as plt
 from scipy.optimize import root
+import ode_solver as ode
 '''
 import numpy as np
 from scipy.integrate import odeint
@@ -244,7 +245,7 @@ plt.ylabel('y')
 plt.title('Continuation Analysis')
 plt.grid(True)
 plt.show()
-'''
+
 
 import numpy as np
 from scipy.optimize import root
@@ -252,8 +253,8 @@ from scipy.integrate import solve_ivp
 import matplotlib.pyplot as plt
 
 # Define the ODE system
-def dydt(t, y, A, B):
-    x, y = y
+def dydt(t, xy, A, B):
+    x, y = xy
     dxdt = A + x**2 * y - (B + 1) * x
     dydt = B * x - x**2 * y
     return [dxdt, dydt]
@@ -261,12 +262,12 @@ def dydt(t, y, A, B):
 # Step 1: Find the equilibrium points
 def equilibrium_points(A, B):
     # Define the equations for root finding
-    def equations(y):
-        x, y = y
+    def equations(xy):
+        x, y = xy
         return [A + x**2 * y - (B + 1) * x, B * x - x**2 * y]
 
     # Initial guesses for equilibrium points
-    guesses = [[0, 0], [1, 1], [-1, -1]]
+    guesses = [[0, 0]]
 
     # Find equilibrium points using root finding
     equilibria = []
@@ -296,14 +297,15 @@ def hopf_bifurcation(A, B):
     def continuation(alpha, B):
         equilibria = equilibrium_points(A, B)
         x, y = equilibria[0]
-        return x - 1, y - 1
+        return x - 1, y - 3
 
     # Solve for the Hopf bifurcation point
     sol = root(continuation, [0.1, 0.1], args=(B,))
     if sol.success:
+        
         print(f"Hopf bifurcation point at B = {B}: {sol.x}")
     else:
-        print("Hopf bifurcation point not found.")
+        print(f"Hopf bifurcation point not found.{B}")
 
 
 # Step 4: Plot the limit cycles
@@ -335,6 +337,83 @@ def main():
         hopf_bifurcation(A, B)
 
     plot_limit_cycles(A, B_values)
+    
 
 if __name__ == "__main__":
     main()
+
+
+def ode_solver(ode_func, initial_conditions, t_span, *args, **kwargs):
+    solution = odeint(ode_func, initial_conditions, t_span, args, **kwargs)
+    t = t_span if hasattr(t_span, '__len__') else [t_span[0], t_span[-1]]
+    return t, solution
+
+def numerical_shooting(ode_func, t_span, initial_conditions, initial_guess, *args, tol=0.1, max_iter=1000, **kwargs):
+    
+    def objective_function(y, t_span):
+        _, y_solution = ode_solver(ode_func, y, t_span, *args)
+        return initial_guess - y_solution[-1]   
+    
+    
+    # Perform shooting method
+    for _ in range(max_iter):
+        # Solve the ODE system with the current initial conditions
+        solution = odeint(ode_func, initial_conditions, t_span, args, **kwargs)
+        
+        # Check the phase condition
+        if np.allclose(solution[-1], initial_guess, atol=tol):
+            # If phase condition is met, compute period and return
+            period = compute_period(solution[:, 0], t_span)
+            return initial_conditions, period
+        
+        # Use Newton's method to update the initial conditions
+        initial_conditions -= (objective_function(initial_conditions, t_span) / np.gradient(ode_func(initial_conditions, t_span, *args)))
+    
+    raise ValueError("Numerical shooting did not converge within the maximum number of iterations.")
+
+'''
+# Define the ode system for Q1a
+def a1_ode_system(xy, t, A, B):
+    x, y = xy
+    dxdt = A + x**2 * y - (B + 1) * x
+    dydt = B * x - x**2 * y
+    return [dxdt, dydt]
+
+# Set initial values
+A = 1
+B = 3
+xy0 = [1, 1]  # 初始条件
+t_span = np.linspace(0, 20, 1001)  # 时间范围
+
+# Solve the ode
+t, solution = ode.ode_solver(a1_ode_system, xy0, t_span, A, B)
+
+# Get the solution
+x_solution_a = solution[:, 0]
+y_solution_a = solution[:, 1]
+
+def has_periodicity(sequence, window_size, tolerance=1e-6):
+    num_steps = len(sequence)
+    mean_diff = []
+    std_diff = []
+    
+    for i in range(num_steps - window_size):
+        window = sequence[i:i+window_size]
+        mean_diff.append(np.mean(np.abs(np.diff(window))))
+        std_diff.append(np.std(np.abs(np.diff(window))))
+        print(np.std(np.abs(np.diff(window))))
+    
+    if np.std(np.abs(np.diff(mean_diff[-1:-10]))) <= tolerance:
+        return True
+    else:
+        return False
+
+
+# 设置窗口大小，用于计算平均值和标准差
+window_size = 50
+
+# 判断序列是否具有周期性
+if has_periodicity(x_solution_a, window_size):
+    print("序列具有周期性")
+else:
+    print("序列不具有周期性")
