@@ -4,6 +4,7 @@ from mpl_toolkits.mplot3d import Axes3D
 from functools import partial
 # Import the module that solves the initial value problem
 import ode_solver as ode
+from scipy.optimize import root
 
 
 '''
@@ -79,7 +80,7 @@ print("Oscillation period:", round(period, 2))
 
 '''
 1_c
-
+'''
 def equations(xy, A, B):
     x, y = xy
     return [A + x**2 * y - (B + 1) * x, B * x - x**2 * y]
@@ -89,17 +90,25 @@ B_values = np.linspace(2, 3, 101)
 t_span = np.linspace(0, 100, 1001)
 initial_condition = ode.equilibrium_points(equations, A, B)[0]
 
+x = []
+y = []
 for B in B_values:
-    t, solution = ode.ode_solver(a1_ode_system, initial_condition, t_span, A, B)
-    x_solution = solution[:, 0]
-    y_solution = solution[:, 1]
-    if ode.has_periodicity(x_solution) and ode.has_periodicity(y_solution):
-        print(f'yes,{B}')
-    else:
-        print('no')
+    xy = root(partial(equations, A=A, B=B), initial_condition).x
+    x.append(xy[0])
+    y.append(xy[1])
 
-ode.plot_limit_cycles(a1_ode_system, A, B_values)
-'''
+plt.plot(B_values, x, label='x')
+plt.plot(B_values, y, label='y')
+plt.xlabel('B')
+plt.ylabel('x,y')
+plt.title('1-c')
+plt.legend()
+plt.grid(True)
+plt.show()
+
+
+
+
 
 
 
@@ -160,7 +169,7 @@ plt.show()
 
 '''
 2_b
-'''
+
 # 定义初始猜测值
 initial_conditions = np.array([-0.939629, -0.086618, 0.853011])
 initial_guess = np.array([0.973258, 0.172633, -0.800624])  
@@ -171,7 +180,7 @@ initial_conditions, period = ode.numerical_shooting(a2_ode_system, t_span, initi
 # 输出起始点的坐标和振荡周期
 print("Coordinates of the starting point:", initial_conditions)
 print("Oscillation period:", round(period, 2))
-
+'''
 '''
 2_c
 '''
@@ -218,6 +227,8 @@ plt.title('3-a')
 plt.grid(True)
 plt.legend()
 plt.show()
+
+
 '''
 3_b
 '''
@@ -237,6 +248,52 @@ plt.show()
 '''
 6_a
 '''
+def ode_fun(x, state, P):
+    u, v = state
+    du_dx = v
+    dv_dx = P * v - P
+    return np.array([du_dx, dv_dx])
+
+#Step1 get the grid
+a = 0
+b = 1
+grid_num = 80
+grid = np.linspace(a, b, grid_num+1)
+
+#Step2 Construct equations and solve    
+h = grid[1] - grid[0] #step size
+for P in [1, 10, 50]:
+    def F(u):
+        eq = np.zeros(grid_num-1)
+        eq[0] = (u[1] - 2*u[0] + 0) / h**2 - P * ((u[0] - 0) / h) + P
+        for i in range(1, grid_num-3):
+            eq[i] = (u[i+1] - 2*u[i] + u[i-1]) / h**2 - P * ((u[i] - u[i-1]) / h) + P
+        eq[grid_num-2] = (0.5 - 2*u[grid_num-2] + u[grid_num-3]) / h**2 - P * ((u[grid_num-2] - u[grid_num-3]) / h) + P
+        return eq
+    # Plot the solution
+      
+
+    
+    #Step3 solve the equation
+    u = root(F, np.zeros(grid_num-1)).x
+
+    new_result = np.zeros(len(u) + 2)
+    new_result[1:-1] = u
+    new_result[0] = 0  # 在开头添加额外值
+    new_result[-1] = 0.5  # 在结尾添加额外值
+    u = new_result
+    print(f'max:, {max(u):.4f}')
+    
+    # Plot the solution
+    plt.plot(np.linspace(0, 1, grid_num + 1), u, label=f'{P}')
+    plt.xlabel('x')
+    plt.ylabel('u(x)')
+    plt.title('3-a')
+    plt.grid(True)
+    plt.legend()
+plt.show()
+
+
 
 '''
 6_b

@@ -650,7 +650,7 @@ B = 2
 lamda = -4
 result = root(odefunc, 0, lamda)
 print(result.x)
-''' 
+
 
 
 def equation(y, lam):
@@ -670,4 +670,66 @@ lambda_values = [-2, -1, 0, 1, 2]
 for lam in lambda_values:
     roots = find_all_roots(lam)
     print("lambda =", lam, "Roots:", roots)
+''' 
+
+import numpy as np
+from scipy.integrate import solve_ivp
+from scipy.optimize import root
+import matplotlib.pyplot as plt
+
+# 定义 Brusselator 系统的微分方程
+def brusselator(t, y, A, B):
+    x, y = y
+    dxdt = A + x**2 * y - (B + 1) * x
+    dydt = B * x - x**2 * y
+    return [dxdt, dydt]
+
+# 定义方程组，用于进行 natural-parameter continuation
+def F(u, B, A):
+    x, y = u
+    return [x**2 * y - (B + 1) * x - A, B * x - x**2 * y]
+
+# 设置参数范围和初始条件
+B_range = np.linspace(2, 3, 100)
+A = 1
+initial_conditions = [1, 1]
+t_span = (0, 20)
+
+# 迭代计算 limit cycles 曲线
+limit_cycles = []
+for B in B_range:
+    # 使用 solve_ivp 解决微分方程
+    sol = solve_ivp(brusselator, t_span, initial_conditions, args=(A, B), dense_output=True)
+    limit_cycles.append(sol)
+
+# 计算 limit cycles 曲线的起始点
+initial_guess = [1, 1]
+initial_points = []
+for i, sol in enumerate(limit_cycles):
+    # 从最后一个时间点开始反向积分，直到找到 phase condition 满足的点
+    t_eval = np.linspace(sol.t[-1], sol.t[0], 100)
+    y_interp = sol.sol(t_eval)
+    phase_condition = np.abs(y_interp[0] - initial_guess[0]) + np.abs(y_interp[1] - initial_guess[1])
+    idx = np.argmin(phase_condition)
+    initial_points.append(y_interp[:, idx])
+
+# 计算 limit cycles 的周期
+periods = []
+for i, sol in enumerate(limit_cycles):
+    # 从最后一个时间点开始反向积分，直到找到与初始条件最接近的点
+    t_eval = np.linspace(sol.t[-1], sol.t[0], 100)
+    y_interp = sol.sol(t_eval)
+    initial_points_tiled = np.tile(initial_points[i], (y_interp.shape[1], 1)).T
+    distance = np.linalg.norm(y_interp - initial_points_tiled, axis=0)
+    period = t_eval[np.argmin(distance)] - t_eval[0]
+    periods.append(period)
+
+# 绘制结果
+plt.plot(B_range, periods)
+plt.xlabel('B')
+plt.ylabel('Period')
+plt.title('Period of Limit Cycles vs B')
+plt.grid(True)
+plt.show()
+
 
