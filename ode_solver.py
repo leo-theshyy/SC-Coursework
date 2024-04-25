@@ -96,6 +96,22 @@ def numerical_shooting(ode_func, t_span, initial_conditions, initial_guess, *arg
         initial_conditions -= (objective_function(initial_conditions, t_span) / np.gradient(ode_func(initial_conditions, t_span, *args)))
     
     raise ValueError("Numerical shooting did not converge within the maximum number of iterations.")
+'''
+has_periodicity
+'''
+def has_periodicity(sequence):
+    highpeaks, _  = find_peaks(sequence)
+    lowpeaks, _ = find_peaks(-sequence)
+    high = np.diff(highpeaks)
+    low = np.diff(lowpeaks)
+    print(high)
+    print(low)
+    print(np.std(high[5:-1]))
+    print(np.std(low[5:-1]))
+    if np.std(high[5:-1]) < 1 and np.std(low[5:-1]) < 1:
+        return True
+    else:
+        return False
 
 '''
 compute the period
@@ -124,24 +140,13 @@ def solve_bvp(ode_func, t_span, x_end, guess):
 '''
 numerical continuation
 '''
-
-
 # Step 1: Find the equilibrium points
-def equilibrium_points(A, B):
+def equilibrium_points(ode_sys, *args):
     # Define the equations for root finding
-    def equations(xy):
-        x, y = xy
-        return [A + x**2 * y - (B + 1) * x, B * x - x**2 * y]
-
-    # Initial guesses for equilibrium points
-    guesses = [[0, 0]]
-
-    # Find equilibrium points using root finding
     equilibria = []
-    for guess in guesses:
-        sol = root(equations, guess)
-        if sol.success:
-            equilibria.append(sol.x)
+    sol = root(ode_sys, [0,0], args)
+    if sol.success:
+        equilibria.append(sol.x)
     return equilibria
 
 # Step 2: Linear stability analysis
@@ -158,27 +163,24 @@ def stability_analysis(A, B, equilibria):
         else:
             print(f"Equilibrium point {equilibrium} is unstable.")
 
-# Step 3: Find Hopf bifurcation point
-def hopf_bifurcation(A, B):
-    # Define the function to find Hopf bifurcation
-    def continuation(alpha, B):
-        equilibria = equilibrium_points(A, B)
-        x, y = equilibria[0]
-        return x - 1, y - 3
-
-    # Solve for the Hopf bifurcation point
-    sol = root(continuation, [0.1, 0.1], args=(B,))
-    if sol.success:
-        print(f"Hopf bifurcation point at B = {B}: {sol.x}")
+def has_periodicity(sequence):
+    highpeaks, _  = find_peaks(sequence)
+    lowpeaks, _ = find_peaks(-sequence)
+    high = np.diff(highpeaks)
+    low = np.diff(lowpeaks)
+    if np.std(high[5:-1]) < 1 and np.std(low[5:-1]) < 1:
+        return True
     else:
-        print(f"Hopf bifurcation point not found.{B}")
+        return False
+    
+
 
 
 # Step 4: Plot the limit cycles
 def plot_limit_cycles(dydt, A, B):
     # Define the function to solve ODE for a given B
     def solve_ode(B):
-        equilibria = equilibrium_points(A, B)
+        equilibria = equilibrium_points(dydt, A, B)
         x0, y0 = equilibria[0]
         sol = solve_ivp(lambda t, y: dydt(t, y, A, B), [0, 10], [x0, y0], t_eval=np.linspace(0, 10, 100))
         return sol.y
@@ -187,11 +189,39 @@ def plot_limit_cycles(dydt, A, B):
     B_values = np.linspace(2, 3, 51)
     for B in B_values:
         xy = solve_ode(B)
-        plt.plot(xy[0], xy[1], color='b', alpha=0.3)
+    plt.plot(xy[0], xy[1], color='b', alpha=0.3)
     plt.xlabel('x')
     plt.ylabel('y')
     plt.title('Limit Cycles for B in [2, 3]')
     plt.grid(True)
     plt.show()
+
+'''
+finite_difference
+'''
+def finite_difference(ode_fun, grid_num, interval,  *args):
+    #Step1 get the grid
+    a, b = interval
+    grid = np.linspace(a, b, grid_num+1)
+    #Step2 Construct equations
+    q = [] #-q is the right hand side of the equation
+    
+    for xi in grid:
+        q.append(ode_fun(xi, [0,0], *args)) #the value of u and v is not important here
+    
+    h = grid[1] - grid[0] #step size
+    
+    def F(u):
+        eq = np.zeros(grid_num-1)
+        eq[0] = (u[1] - 2*u[0] + 1) / h**2 - ode_fun(grid[1], [0,0], *args)[1]
+        for i in range(1, grid_num-3):
+            eq[i] = (u[i+1] - 2*u[i] + u[i-1]) / h**2 - ode_fun(grid[i+1], [0,0], *args)[1]
+        eq[grid_num-2] = (-1 - 2*u[grid_num-2] + u[grid_num-3]) / h**2 - ode_fun(grid[grid_num-1], [0,0], *args)[1]
+        return eq
+    
+    #Step3 solve the equation
+    u = root(F, np.zeros(grid_num-1)).x
+    
+    return u
 
 

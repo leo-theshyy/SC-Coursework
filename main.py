@@ -64,10 +64,9 @@ plt.show()
 
 '''
 1_b
-'''
+
 # 定义初始猜测值
 initial_conditions = np.array([0.61843, 4.72089])
-initial_conditions = np.array([1.0, 1.0])
 initial_guess = np.array([0.4091137, 4.1735098])  
 
 # 调用 numerical_shooting 函数，获取起始点的坐标和振荡周期
@@ -76,19 +75,31 @@ initial_conditions, period = ode.numerical_shooting(a1_ode_system, t_span, initi
 # 输出起始点的坐标和振荡周期
 print("Coordinates of the starting point:", initial_conditions)
 print("Oscillation period:", round(period, 2))
+'''
 
 '''
 1_c
-'''
 
+def equations(xy, A, B):
+    x, y = xy
+    return [A + x**2 * y - (B + 1) * x, B * x - x**2 * y]
 A = 1
-B_values = np.linspace(2, 3, 11)
+B = 2
+B_values = np.linspace(2, 3, 101)
+t_span = np.linspace(0, 100, 1001)
+initial_condition = ode.equilibrium_points(equations, A, B)[0]
 
 for B in B_values:
-    ode.hopf_bifurcation(A, B)
+    t, solution = ode.ode_solver(a1_ode_system, initial_condition, t_span, A, B)
+    x_solution = solution[:, 0]
+    y_solution = solution[:, 1]
+    if ode.has_periodicity(x_solution) and ode.has_periodicity(y_solution):
+        print(f'yes,{B}')
+    else:
+        print('no')
 
 ode.plot_limit_cycles(a1_ode_system, A, B_values)
-
+'''
 
 
 
@@ -177,7 +188,36 @@ print("Oscillation period:", round(period, 2))
 '''
 3_a
 '''
+def poisson_eq(x, state, sigma):
+    u, v = state
+    # Compute the derivative of u with respect to x
+    du_dx = v
+    # Compute the second derivative of u with respect to x
+    dv_dx = - (1 / np.sqrt(2 * np.pi * sigma**2)) * np.exp(-x**2 / (2 * sigma**2))
+    # Return the system of ODEs
+    return np.array([du_dx, dv_dx])
 
+grid_num = 50
+interval = (-1, 1)
+sigma = 0.5
+
+result = ode.finite_difference(partial(poisson_eq, sigma=sigma), grid_num, interval)
+print(f"The value of u(0) is approximately: {result[grid_num//2]:.4f}")
+
+new_result = np.zeros(len(result) + 2)
+new_result[1:-1] = result
+new_result[0] = 1  # 在开头添加额外值
+new_result[-1] = -1  # 在结尾添加额外值
+result = new_result
+
+# Plot the solution
+plt.plot(np.linspace(-1, 1, grid_num + 1), result, label='Solution')
+plt.xlabel('x')
+plt.ylabel('u(x)')
+plt.title('3-a')
+plt.grid(True)
+plt.legend()
+plt.show()
 '''
 3_b
 '''

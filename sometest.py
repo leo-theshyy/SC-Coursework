@@ -1,10 +1,12 @@
 import numpy as np
+from scipy import integrate
 from scipy.integrate import odeint
 from scipy.integrate import solve_bvp
 from scipy.integrate import solve_ivp
 import matplotlib.pyplot as plt
 from scipy.optimize import root
 import ode_solver as ode
+from scipy.signal import find_peaks
 '''
 import numpy as np
 from scipy.integrate import odeint
@@ -371,7 +373,7 @@ def numerical_shooting(ode_func, t_span, initial_conditions, initial_guess, *arg
     
     raise ValueError("Numerical shooting did not converge within the maximum number of iterations.")
 
-'''
+
 # Define the ode system for Q1a
 def a1_ode_system(xy, t, A, B):
     x, y = xy
@@ -383,7 +385,7 @@ def a1_ode_system(xy, t, A, B):
 A = 1
 B = 3
 xy0 = [1, 1]  # 初始条件
-t_span = np.linspace(0, 20, 1001)  # 时间范围
+t_span = np.linspace(0, 100, 1001)  # 时间范围
 
 # Solve the ode
 t, solution = ode.ode_solver(a1_ode_system, xy0, t_span, A, B)
@@ -392,28 +394,280 @@ t, solution = ode.ode_solver(a1_ode_system, xy0, t_span, A, B)
 x_solution_a = solution[:, 0]
 y_solution_a = solution[:, 1]
 
-def has_periodicity(sequence, window_size, tolerance=1e-6):
-    num_steps = len(sequence)
-    mean_diff = []
-    std_diff = []
-    
-    for i in range(num_steps - window_size):
-        window = sequence[i:i+window_size]
-        mean_diff.append(np.mean(np.abs(np.diff(window))))
-        std_diff.append(np.std(np.abs(np.diff(window))))
-        print(np.std(np.abs(np.diff(window))))
-    
-    if np.std(np.abs(np.diff(mean_diff[-1:-10]))) <= tolerance:
+# Plot the solution as x-t and y-t graphs
+plt.plot(t, x_solution_a, label='x(t)')
+plt.plot(t, y_solution_a, label='y(t)')
+plt.xlabel('Time')
+plt.ylabel('x,y')
+plt.title('1-a')
+plt.legend()
+plt.grid(True)
+plt.show()
+
+def has_periodicity(sequence):
+    highpeaks, _  = find_peaks(sequence)
+    lowpeaks, _ = find_peaks(-sequence)
+    high = np.diff(highpeaks)
+    low = np.diff(lowpeaks)
+    print(high)
+    print(low)
+    print(np.std(high[5:-1]))
+    print(np.std(low[5:-1]))
+    return
+
+
+has_periodicity(x_solution_a)
+
+
+# 定义ODE方程
+def dx_dt(t, xy, A, B):
+    x, y = xy
+    dxdt = A + x**2 * y - (B + 1) * x
+    dydt = B * x - x**2 * y
+    return [dxdt, dydt]
+
+# 定义约束条件
+def constraint(x_T, y_T, x0, y0):
+    return np.array([x_T - x0, y_T - y0])
+
+
+def shooting_method(A, B, x0, y0, T_guess, tol=1e-6, max_iter=100):
+    u0_guess = [x0, y0]
+    T = T_guess
+    for _ in range(max_iter):
+        sol = solve_ivp(lambda t, xy: dx_dt(t, xy, A, B), [0, T], u0_guess)
+        x_T, y_T = sol.y[:, -1]
+        error = constraint(x_T, y_T, x0, y0)
+        if np.all(np.abs(error) < tol):
+            return sol, T
+        # 更新 T 的值，确保分母不为零
+        error_new = constraint(x_T, y_T, x0, y0)
+        if error[0] - error_new[0] != 0:
+            T -= error[0] * (T - T_guess) / (error[0] - error_new[0])
+        else:
+            # 如果分母为零，直接使用均值更新 T 的值
+            T = (T + T_guess) / 2
+    raise RuntimeError("射击法未收敛")
+
+# 示例参数和初始条件
+A = 1
+B = 3
+x0 = 0.61843
+y0 = 4.72089
+T_guess = 20
+
+# 使用射击法求解
+sol, T = shooting_method(A, B, x0, y0, T_guess)
+
+# 输出结果
+print("最优解 u0:", sol.y[:, -1])
+print("最优解 T:", T)
+
+
+
+   
+
+# Define the ODE system
+def dydt(t, xy, A, B):
+    x, y = xy
+    dxdt = A + x**2 * y - (B + 1) * x
+    dydt = B * x - x**2 * y
+    return [dxdt, dydt]
+
+# Step 1: Find the equilibrium points
+def equilibrium_points(A, B):
+    # Define the equations for root finding
+    def equations(xy):
+        x, y = xy
+        return [A + x**2 * y - (B + 1) * x, B * x - x**2 * y]
+
+    # Initial guess for equilibrium point
+    guess = [0, 0]
+
+    # Find equilibrium point using root finding
+    sol = root(equations, guess)
+    if sol.success:
+        return [sol.x]
+    else:
+        return []
+
+# Main function
+def main():
+    A = 1
+    B_values = np.linspace(2, 3, 50)
+    hopf_points = []
+
+    # Step 2: Natural-parameter continuation
+    for B in B_values:
+        # Find equilibrium point at B = 2
+        if B == 2:
+            equilibrium = equilibrium_points(A, B)
+            if equilibrium:
+                initial_guess = equilibrium[0]
+            else:
+                print("Equilibrium point not found at B = 2.")
+                return
+            
+        # Step 3: Find Hopf bifurcation point using continuation
+        def continuation(xy, B):
+            x, y = xy
+            return [A + x**2 * y - (B + 1) * x - initial_guess[0], 
+                    B * x - x**2 * y - initial_guess[1]]
+
+        sol = root(continuation, [0.1, 0.1], args=(B,))
+        if sol.success:
+            hopf_points.append(sol.x)
+        else:
+            print(f"Hopf bifurcation point not found at B = {B}.")
+
+    # Plot the results
+    hopf_points = np.array(hopf_points)
+    plt.plot(B_values, hopf_points[:, 0], label='Hopf bifurcation x')
+    plt.plot(B_values, hopf_points[:, 1], label='Hopf bifurcation y')
+    plt.xlabel('B')
+    plt.ylabel('Values at Hopf bifurcation point')
+    plt.title('Hopf bifurcation point vs. B')
+    plt.legend()
+    plt.grid(True)
+    plt.show()
+
+if __name__ == "__main__":
+    main()
+
+
+
+
+# Define the ode system for Q1a
+def a1_ode_system(xy, t, A, B):
+    x, y = xy
+    dxdt = A + x**2 * y - (B + 1) * x
+    dydt = B * x - x**2 * y
+    return [dxdt, dydt]
+
+# Set initial values
+A = 1
+B = 2.9
+xy0 = [1, 2]  # 初始条件
+t_span = np.linspace(0, 100, 1001)  # 时间范围
+
+# Solve the ode
+t, solution = ode.ode_solver(a1_ode_system, xy0, t_span, A, B)
+
+# Get the solution
+x_solution_a = solution[:, 0]
+y_solution_a = solution[:, 1]
+
+# Plot the solution as x-t and y-t graphs
+plt.plot(t, x_solution_a, label='x(t)')
+plt.plot(t, y_solution_a, label='y(t)')
+plt.xlabel('Time')
+plt.ylabel('x,y')
+plt.title('1-a')
+plt.legend()
+plt.grid(True)
+plt.show()
+
+# Plot the limit cycle
+plt.plot(x_solution_a,y_solution_a,label='1')
+plt.xlabel('x')
+plt.ylabel('y')
+plt.title('1-a')
+plt.legend()
+plt.grid(True)
+plt.show()
+
+def has_periodicity(sequence):
+    highpeaks, _  = find_peaks(sequence)
+    lowpeaks, _ = find_peaks(-sequence)
+    high = np.diff(highpeaks)
+    low = np.diff(lowpeaks)
+    print(high)
+    print(low)
+    print(sequence[high])
+    print(np.std(high[5:-1]))
+    print(np.std(low[5:-1]))
+    if np.std(high[5:-1]) < 1 and np.std(low[5:-1]) < 1:
         return True
     else:
         return False
-
-
-# 设置窗口大小，用于计算平均值和标准差
-window_size = 50
-
-# 判断序列是否具有周期性
-if has_periodicity(x_solution_a, window_size):
-    print("序列具有周期性")
+    
+if has_periodicity(x_solution_a):
+    print('yes')
 else:
-    print("序列不具有周期性")
+    print('no')
+    
+    
+    
+    
+
+
+
+
+# 定义ODE
+def odefunc(t, vars, A, B):
+    x, y = vars
+    dxdt = A + x**2 * y - (B + 1) * x
+    dydt = B * x - x**2 * y
+    return [dxdt, dydt]
+
+# 参数设置
+A = 1
+B_values = np.linspace(2, 3, 100)  # 在2到3之间均匀取100个点
+
+# 存储平衡解或周期解的列表
+equilibrium_or_periodic_solutions = []
+
+# 对于每个B值，求解ODE并找到平衡解或周期解
+for B in B_values:
+    sol = solve_ivp(odefunc, (0, 10), [0.1, 0.1], args=(A, B), dense_output=True)
+
+    # 检查解是否是平衡解或周期解
+    x_values = sol.sol(sol.t)[0]
+    y_values = sol.sol(sol.t)[1]
+
+    # 判断x和y是否在最后一步附近收敛到一个常数，如果是，则认为是平衡解或周期解
+    if np.allclose(x_values[-1], x_values[-2], atol=1e-6) and np.allclose(y_values[-1], y_values[-2], atol=1e-6):
+        equilibrium_or_periodic_solutions.append(x_values[-1])
+
+# 绘制分岔曲线
+plt.figure(figsize=(10, 6))
+plt.title("Bifurcation Diagram")
+plt.xlabel("B")
+plt.ylabel("x")
+plt.grid(True)
+
+# 绘制平衡解或周期解
+plt.plot(B_values[:len(equilibrium_or_periodic_solutions)], equilibrium_or_periodic_solutions, 'k.', markersize=1)
+
+plt.show()
+
+
+def odefunc(y, lamda):
+    return y ** 3 + lamda * y
+
+A = 1
+B = 2
+lamda = -4
+result = root(odefunc, 0, lamda)
+print(result.x)
+''' 
+
+
+def equation(y, lam):
+    return y**3 + lam * y
+
+def find_all_roots(lam):
+    initial_guesses = [0.1, -0.1, 1, -1, 10, -10]  # 初始猜测值
+    roots = []
+    for guess in initial_guesses:
+        sol = root(equation, guess, args=(lam,))
+        if sol.success:
+            roots.append(sol.x[0])
+    return roots
+
+lambda_values = [-2, -1, 0, 1, 2]
+
+for lam in lambda_values:
+    roots = find_all_roots(lam)
+    print("lambda =", lam, "Roots:", roots)
+
