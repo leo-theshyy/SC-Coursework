@@ -1,300 +1,166 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
-from functools import partial
-# Import the module that solves the initial value problem
-import ode_solver as ode
+from scipy.integrate import odeint
 from scipy.optimize import root
-
-
-'''
-1_a
-'''
-# Define the ode system for Q1a
-def a1_ode_system(xy, t, A, B):
-    x, y = xy
-    dxdt = A + x**2 * y - (B + 1) * x
-    dydt = B * x - x**2 * y
-    return [dxdt, dydt]
-
-# Set initial values
-A = 1
-B = 3
-xy0 = [1, 1]  # 初始条件
-t_span = np.linspace(0, 20, 1001)  # 时间范围
-
-# Solve the ode
-t, solution = ode.ode_solver(a1_ode_system, xy0, t_span, A, B)
-
-# Get the solution
-x_solution_a = solution[:, 0]
-y_solution_a = solution[:, 1]
-
-
-
-print(x_solution_a[-1])
-print(y_solution_a[-1])
-
-# Plot the solution as x-t and y-t graphs
-plt.plot(t, x_solution_a, label='x(t)')
-plt.plot(t, y_solution_a, label='y(t)')
-plt.xlabel('Time')
-plt.ylabel('x,y')
-plt.title('1-a')
-plt.legend()
-plt.grid(True)
-plt.show()
-
-# Plot the limit cycle
-plt.plot(x_solution_a,y_solution_a,label='1')
-plt.xlabel('x')
-plt.ylabel('y')
-plt.title('1-a')
-plt.legend()
-plt.grid(True)
-plt.show()
-
-#画相位图
-fig = plt.figure()
-ax = fig.add_subplot(111, projection='3d')
-ax.plot(t, x_solution_a, y_solution_a)
-ax.set_xlabel('t')
-ax.set_ylabel('x')
-ax.set_zlabel('y')
-plt.show()
-
-'''
-1_b
-
-# 定义初始猜测值
-initial_conditions = np.array([0.61843, 4.72089])
-initial_guess = np.array([0.4091137, 4.1735098])  
-
-# 调用 numerical_shooting 函数，获取起始点的坐标和振荡周期
-initial_conditions, period = ode.numerical_shooting(a1_ode_system, t_span, initial_conditions, initial_guess, A, B)
-
-# 输出起始点的坐标和振荡周期
-print("Coordinates of the starting point:", initial_conditions)
-print("Oscillation period:", round(period, 2))
-'''
-
-'''
-1_c
-'''
-def equations(xy, A, B):
-    x, y = xy
-    return [A + x**2 * y - (B + 1) * x, B * x - x**2 * y]
-A = 1
-B = 2
-B_values = np.linspace(2, 3, 101)
-t_span = np.linspace(0, 100, 1001)
-initial_condition = ode.equilibrium_points(equations, A, B)[0]
-
-x = []
-y = []
-for B in B_values:
-    xy = root(partial(equations, A=A, B=B), initial_condition).x
-    x.append(xy[0])
-    y.append(xy[1])
-
-plt.plot(B_values, x, label='x')
-plt.plot(B_values, y, label='y')
-plt.xlabel('B')
-plt.ylabel('x,y')
-plt.title('1-c')
-plt.legend()
-plt.grid(True)
-plt.show()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-'''
-2_a
-'''
-#Define the ode system for Q2a
-def a2_ode_system(xyz, t, beta):
-    x, y, z = xyz
-    dxdt = beta * x - y - z + x * (x**2 + y**2 + z**2) - x * (x**2 + y**2 + z**2)**2
-    dydt = x + beta * y - z + y * (x**2 + y**2 + z**2) - y * (x**2 + y**2 + z**2)**2
-    dzdt = x + y + beta * z + z * (x**2 + y**2 + z**2) - z * (x**2 + y**2 + z**2)**2
-    return [dxdt, dydt, dzdt]
-
-#Set initial values
-beta = 1
-xyz0 = [1, 0, -1]
-t_span = np.linspace(0, 20, 1001)
-
-#Solve the ode
-t, solution = ode.ode_solver(a2_ode_system, xyz0, t_span, beta)
-
-#Get the solution
-x_solution_b = solution[:, 0]
-y_solution_b = solution[:, 1]
-z_solution_b = solution[:, 2]
-
-print(x_solution_b[-1])
-print(y_solution_b[-1])
-print(z_solution_b[-1])
-
-#Plot the solution
-plt.plot(t, x_solution_b, label='x(t)')
-plt.plot(t, y_solution_b, label='y(t)')
-plt.plot(t, z_solution_b, label='z(t)')
-plt.xlabel('Time')
-plt.ylabel('x,y,z')
-plt.title('b')
-plt.legend()
-plt.grid(True)
-plt.show()
-
-# Plot the limit cycle
-fig = plt.figure()
-ax = fig.add_subplot(111, projection='3d')
-ax.plot(x_solution_b, y_solution_b, z_solution_b)
-ax.set_xlabel('X')
-ax.set_ylabel('Y')
-ax.set_zlabel('Z')
-plt.show()
-
-'''
-2_b
-
-# 定义初始猜测值
-initial_conditions = np.array([-0.939629, -0.086618, 0.853011])
-initial_guess = np.array([0.973258, 0.172633, -0.800624])  
-
-# 调用 numerical_shooting 函数，获取起始点的坐标和振荡周期
-initial_conditions, period = ode.numerical_shooting(a2_ode_system, t_span, initial_conditions, initial_guess, beta)
-
-# 输出起始点的坐标和振荡周期
-print("Coordinates of the starting point:", initial_conditions)
-print("Oscillation period:", round(period, 2))
-'''
-'''
-2_c
-'''
-
-
-
-
-
-
-
-
-
-
-'''
-3_a
-'''
-def poisson_eq(x, state, sigma):
-    u, v = state
-    # Compute the derivative of u with respect to x
-    du_dx = v
-    # Compute the second derivative of u with respect to x
-    dv_dx = - (1 / np.sqrt(2 * np.pi * sigma**2)) * np.exp(-x**2 / (2 * sigma**2))
-    # Return the system of ODEs
-    return np.array([du_dx, dv_dx])
-
-grid_num = 50
-interval = (-1, 1)
-sigma = 0.5
-
-result = ode.finite_difference(partial(poisson_eq, sigma=sigma), grid_num, interval)
-print(f"The value of u(0) is approximately: {result[grid_num//2]:.4f}")
-
-new_result = np.zeros(len(result) + 2)
-new_result[1:-1] = result
-new_result[0] = 1  # 在开头添加额外值
-new_result[-1] = -1  # 在结尾添加额外值
-result = new_result
-
-# Plot the solution
-plt.plot(np.linspace(-1, 1, grid_num + 1), result, label='Solution')
-plt.xlabel('x')
-plt.ylabel('u(x)')
-plt.title('3-a')
-plt.grid(True)
-plt.legend()
-plt.show()
-
-
-'''
-3_b
-'''
-
-
-
-
-
-
-
-
-
-
-
-
-
-'''
-6_a
-'''
-def ode_fun(x, state, P):
-    u, v = state
-    du_dx = v
-    dv_dx = P * v - P
-    return np.array([du_dx, dv_dx])
-
-#Step1 get the grid
-a = 0
-b = 1
-grid_num = 80
-grid = np.linspace(a, b, grid_num+1)
-
-#Step2 Construct equations and solve    
-h = grid[1] - grid[0] #step size
-for P in [1, 10, 50]:
-    def F(u):
-        eq = np.zeros(grid_num-1)
-        eq[0] = (u[1] - 2*u[0] + 0) / h**2 - P * ((u[0] - 0) / h) + P
-        for i in range(1, grid_num-3):
-            eq[i] = (u[i+1] - 2*u[i] + u[i-1]) / h**2 - P * ((u[i] - u[i-1]) / h) + P
-        eq[grid_num-2] = (0.5 - 2*u[grid_num-2] + u[grid_num-3]) / h**2 - P * ((u[grid_num-2] - u[grid_num-3]) / h) + P
-        return eq
-    # Plot the solution
-      
-
+from scipy.signal import find_peaks
+from scipy.sparse import diags, csc_matrix
+from scipy.sparse.linalg import spsolve
+
+def numerical_shooting_bru(ode_func, t_span, initial_conditions, initial_guess, *args, tol=1e-3, max_iter=1000):
+    def objective_function(y, t_span):
+        _, y_solution = ode_solver(ode_func, y, t_span, *args)
+        return initial_guess - y_solution[-1]
+
+    for _ in range(max_iter):
+        solution = odeint(ode_func, initial_conditions, t_span, args=args)
+        if np.allclose(solution[-1], initial_guess, atol=tol):
+            period = compute_period(solution[:, 0], t_span)
+            return initial_conditions, period
+        initial_conditions -= (objective_function(initial_conditions, t_span) / np.gradient(ode_func(initial_conditions, t_span, *args)))
+    raise ValueError("Numerical shooting did not converge within the maximum number of iterations.")
+
+def ode_solver(ode_func, initial_conditions, t_span, *args):
+    solution = odeint(ode_func, initial_conditions, t_span, args=args)
+    return t_span, solution
+
+def solve_limit_cycles(A, B_values):
+    def equations(xy, A, B):
+        x, y = xy
+        return [A + x**2 * y - (B + 1) * x, B * x - x**2 * y]
+
+    x_values, y_values = [], []
+    for B in B_values:
+        initial_condition = root(equations, [0, 0], args=(A, B)).x
+        x_values.append(initial_condition[0])
+        y_values.append(initial_condition[1])
+    return B_values, x_values, y_values
+
+
+def numerical_shooting(ode_func, t_span, initial_conditions, initial_guess, beta, tol=1e-3, max_iter=200):
+    def objective_function(y, t_span,initial_guess):
+        y_solution = odeint(ode_func, y, t_span, args=(beta,))
+        return initial_guess - y_solution[-1]
+
+    def compute_jacobian(f, y, t, beta, eps=1e-6):
+        n = len(y)
+        J = np.zeros((n, n))
+        f0 = np.array(f(y, t, beta))
+        for i in range(n):
+            y_eps = y.copy()
+            y_eps[i] += eps
+            f_eps = np.array(f(y_eps, t, beta))
+            J[:, i] = (f_eps - f0) / eps
+        return J
+
+    initial_conditions = initial_conditions.astype(float)  # Ensure initial_conditions is float
+    for iteration in range(max_iter):
+        solution = odeint(ode_func, initial_conditions, t_span, args=(beta,))
+        residual = np.abs(objective_function(initial_conditions, t_span,initial_guess))
+        print(f"Iteration {iteration}: residual = {residual}")
+        if np.allclose(residual, 0, atol=tol):
+            period = compute_period(solution[:, 0], t_span)
+            return initial_conditions, period
+        jacobian = compute_jacobian(ode_func, initial_conditions, t_span[0], beta)
+        # Add regularization term to the Jacobian to prevent singular matrix error
+        reg_term = np.eye(jacobian.shape[0]) * 1e-6
+        try:
+            step = np.linalg.solve(jacobian + reg_term, objective_function(initial_conditions, t_span,initial_guess))
+            initial_conditions -= step
+        except np.linalg.LinAlgError as e:
+            print(f"Iteration {iteration}: LinAlgError - {e}")
+            break
+    raise ValueError("Numerical shooting did not converge within the maximum number of iterations.")
+
+def compute_period(solution, t_span):
+    peaks, _ = find_peaks(solution)
+    if len(peaks) < 2:
+        return np.nan
+    period = (t_span[1] - t_span[0]) * (peaks[1] - peaks[0])
+    return period
+
+
+
+def poisson_rhs(x, sigma):
+    """Calculate the right-hand side of the Poisson equation."""
+    return -1 / np.sqrt(2 * np.pi * sigma**2) * np.exp(-x**2 / (2 * sigma**2))
+
+def finite_difference_poisson_root(sigma, grid_points):
+    """Solve the Poisson equation using a finite difference method and root-finding."""
+    D = 1
+    x = np.linspace(-1, 1, grid_points)
+    dx = x[1] - x[0]
     
-    #Step3 solve the equation
-    u = root(F, np.zeros(grid_num-1)).x
-
-    new_result = np.zeros(len(u) + 2)
-    new_result[1:-1] = u
-    new_result[0] = 0  # 在开头添加额外值
-    new_result[-1] = 0.5  # 在结尾添加额外值
-    u = new_result
-    print(f'max:, {max(u):.4f}')
+    # Construct the coefficient matrix A using finite differences
+    A = diags([1, -2, 1], [-1, 0, 1], shape=(grid_points-2, grid_points-2)).toarray()
+    b = poisson_rhs(x[1:-1], sigma) * dx**2 / D
     
-    # Plot the solution
-    plt.plot(np.linspace(0, 1, grid_num + 1), u, label=f'{P}')
-    plt.xlabel('x')
-    plt.ylabel('u(x)')
-    plt.title('3-a')
-    plt.grid(True)
-    plt.legend()
-plt.show()
+    # Initial guess for the solution
+    u_guess = np.zeros(grid_points-2)
+    
+    # Use a root-finding method to solve the linear system
+    solution = root(lambda u: A @ u + b, u_guess, method='hybr')
+    
+    # Construct the full solution including boundary conditions
+    u = np.concatenate(([-1], solution.x, [-1]))
+    
+    return x, u
 
+def finite_difference_poisson_sparse(sigma, grid_points):
+    """Solve the Poisson equation using a finite difference method and a sparse matrix solver."""
+    D = 1
+    x = np.linspace(-1, 1, grid_points)
+    dx = x[1] - x[0]
+    
+    # Construct the sparse matrix A using finite differences
+    diagonals = [np.ones(grid_points-2), -2*np.ones(grid_points-2), np.ones(grid_points-2)]
+    A = diags(diagonals, [-1, 0, 1], shape=(grid_points-2, grid_points-2))
+    A = csc_matrix(A)  # Convert A to CSC format
+    
+    # Right-hand side of the equation
+    b = poisson_rhs(x[1:-1], sigma) * dx**2 / D
+    
+    # Solve the linear system using a sparse matrix solver
+    u_interior = spsolve(A, b)
+    
+    # Construct the full solution including boundary conditions
+    u = np.concatenate(([-1], u_interior, [-1]))
+    
+    return x, u
 
+def finite_difference_rcd(P, grid_points=81):
+    """
+    Solves the reaction-convection-diffusion equation using the finite difference method.
 
-'''
-6_b
-'''
+    Parameters:
+    - P: The Peclet number which defines the strength of the convection.
+    - grid_points: The number of points in the discretization grid.
+
+    Returns:
+    - x: The spatial grid.
+    - u: The solution at each point on the grid.
+    """
+    x = np.linspace(0, 1, grid_points)
+    dx = x[1] - x[0]
+    
+    # Construct the coefficient matrix A
+    diagonals = [
+        -2 * np.ones(grid_points),  # main diagonal
+        np.ones(grid_points - 1),   # upper diagonal
+        np.ones(grid_points - 1)    # lower diagonal
+    ]
+    A = diags(diagonals, [0, 1, -1]).toarray()
+    A[0, 0] = 1  # Boundary condition u(0) = 0
+    A[0, 1] = 0
+    A[-1, -1] = 1  # Boundary condition u(1) = 1/2
+    A[-1, -2] = 0
+    A = csc_matrix(A) / dx**2
+    
+    # Construct the right-hand side vector b
+    b = np.zeros(grid_points)
+    b[-1] = 0.5
+    b[1:-1] = P * (b[2:] - b[:-2]) / (2 * dx) - P
+
+    # Solve the linear system A*u = b
+    u = spsolve(A, b)
+    
+    return x, u
